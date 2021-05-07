@@ -6,7 +6,7 @@ from deap import tools
 import random
 import time
 
-selmethod = 'tournament'
+selmethod = 'best'
 crossover = 'heuristic'
 mutation = 'gaussian'
 minimalization = True
@@ -50,6 +50,16 @@ def heuristic(ind1, ind2):
 
     return ind1, ind2
 
+def arithmetic(ind1, ind2):
+    k1 = random.random()
+    k2 = random.random()
+    ind1[0] = k1 * ind1[0] + (1 - k1) * ind2[0]
+    ind1[1] = k1 * ind1[1] + (1 - k1) * ind2[1]
+    ind2[0] = (1 - k2) * ind1[0] + k2 * ind2[0]
+    ind2[1] = (1 - k2) * ind1[1] + k2 * ind2[1]
+    return ind1, ind2
+
+
 # choosing the fitness function
 if minimalization:
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -81,7 +91,6 @@ elif selmethod == 'doubletournament':
 else:
     toolbox.register("select", tools.selStochasticUniversalSampling)
 
-# TODO: arithmetic & heristic
 # choosing crossover method
 if crossover == 'onepoint':
     toolbox.register("mate", tools.cxOnePoint)
@@ -90,7 +99,7 @@ elif crossover == 'uniform':
 elif crossover == 'twopoint':
     toolbox.register("mate", tools.cxTwoPoint)
 elif crossover == 'arithmetic':
-    pass
+    toolbox.register("mate", arithmetic)
 elif crossover == 'heuristic':
     toolbox.register("mate", heuristic)
 else:
@@ -172,7 +181,7 @@ while g < numberIteration:
     best_ind = tools.selBest(pop, 1)[0]
     print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
     results.append([mean, std, best_ind.fitness.values])
-    #
+    
 print("-- End of (successful) evolution --")
 t2 = time.time()
 
@@ -184,16 +193,3 @@ with open('results.txt', 'w') as f:
 if __name__ == "__main__":
     pool = multiprocessing.Pool(processes=4)
     toolbox.register("map", pool.map)
-
-    # pop = toolbox.population(n=300)
-    # hof = tools.HallOfFame(1)
-    # stats = tools.Statistics(lambda ind: ind.fitness.values)
-    # stats.register("avg", numpy.mean)
-    # stats.register("std", numpy.std)
-    # stats.register("min", numpy.min)
-    # stats.register("max", numpy.max)
-    #
-    # algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2, ngen=40,
-    #                     stats=stats, halloffame=hof)
-
-    # pool.close()
