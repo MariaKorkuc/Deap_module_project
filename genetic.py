@@ -5,10 +5,10 @@ from deap import tools
 import random
 import time
 import pandas as pd
-from deapWorkspace.Classifiers import DTC, SVC, RFC, ABC
+from Classifiers import DTC, SVC, RFC, ABC, GP, KN
 
-# SVC, DTC, RFC, ABC
-curr_clf_type = 'ABC'
+# SVC, DTC, RFC, ABC, KN, GP
+curr_clf_type = 'GP'
 
 selmethod = 'best'
 crossover = 'onepoint'
@@ -42,6 +42,8 @@ def choose_clf(clf_type):
         'DTC': (DTC.DTFeatures, DTC.DTParametersFeatureFitness, DTC.mutationDT),
         'RFC': (RFC.RFCFeatures, RFC.RFCParametersFeatureFitness, RFC.mutationRF),
         'ABC': (ABC.ABCFeatures, ABC.ABCParametersFeatureFitness, ABC.mutationAB),
+        'KN': (KN.KNeighborsFeature, KN.KNeighborsFeatureFitness, KN.mutationKNeighbors),
+        'GP': (GP.GaussianProcessFeature, GP.GaussianProcessFeatureFitness, GP.mutationGaussianProcess),
     }[clf_type]
 
 def individual(icls, start=-10, stop=10):
@@ -70,7 +72,6 @@ def register_toolbox(clf_type=curr_clf_type):
     fitness = parameters[1]
     mutation_type = parameters[2]
 
-
     toolbox.register('individual',features, numberOfAtributtes, creator.Individual)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     toolbox.register("evaluate", fitness,y,df,numberOfAtributtes)
@@ -90,7 +91,7 @@ def register_toolbox(clf_type=curr_clf_type):
         toolbox.register("select", tools.selDoubleTournament, tournsize=3, parsimony=2, fitness_first=False)
     else:
         toolbox.register("select", tools.selStochasticUniversalSampling)
-    #
+
     # choosing crossover method
     if crossover == 'onepoint':
         toolbox.register("mate", tools.cxOnePoint)
@@ -160,7 +161,6 @@ def loop(g):
         print(f"{curr_clf_type}: Best individual is {best_ind}, {best_ind.fitness.values}")
         # results.append([mean, std, best_ind.fitness.values])
         results.append(best_ind.fitness.values)
-        #
     print("-- End of (successful) evolution --")
 
 def toFile(results, t1, t2):
