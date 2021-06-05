@@ -5,10 +5,10 @@ from deap import tools
 import random
 import time
 import pandas as pd
-from Classifiers import DTC, SVC, RFC, ABC, GP, KN
+from Classifiers import DTC, SVC, RFC, ABC, GP, KN, MLP
 
 # SVC, DTC, RFC, ABC, KN, GP
-curr_clf_type = 'GP'
+curr_clf_type = 'SVC'
 
 selmethod = 'best'
 crossover = 'onepoint'
@@ -44,6 +44,7 @@ def choose_clf(clf_type):
         'ABC': (ABC.ABCFeatures, ABC.ABCParametersFeatureFitness, ABC.mutationAB),
         'KN': (KN.KNeighborsFeature, KN.KNeighborsFeatureFitness, KN.mutationKNeighbors),
         'GP': (GP.GaussianProcessFeature, GP.GaussianProcessFeatureFitness, GP.mutationGaussianProcess),
+        'MLP': (MLP.MLPParametersFeatures, MLP.MLPParametersFeatureFitness, MLP.mutationMLP)
     }[clf_type]
 
 def individual(icls, start=-10, stop=10):
@@ -55,12 +56,12 @@ def individual(icls, start=-10, stop=10):
 
 def register_toolbox(clf_type=curr_clf_type):
     # choosing the fitness function
-    if minimalization:
-        creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-        creator.create("Individual", list, fitness=creator.FitnessMin)
-    else:
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Individual", list, fitness=creator.FitnessMax)
+    # if minimalization:
+    #     creator.create("FitnessMin", base.Fitness, weights=[-1.0])
+    #     creator.create("Individual", list, fitness=creator.FitnessMin)
+    # else:
+    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMax)
 
 
     # toolbox prepration
@@ -139,7 +140,7 @@ def loop(g):
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = map(toolbox.evaluate, invalid_ind)
+        fitnesses = toolbox.map(toolbox.evaluate, pop)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
@@ -172,8 +173,10 @@ def toFile(results, t1, t2):
 toolbox = register_toolbox()
 
 pop = toolbox.population(n=sizePopulation)
-fitnesses = toolbox.map(toolbox.evaluate, pop)
+fitnesses = list(toolbox.map(toolbox.evaluate, pop))
 for ind, fit in zip(pop, fitnesses):
+    print(ind.fitness.values)
+    print('fit, ', fit)
     ind.fitness.values = fit
 
 g = 0
